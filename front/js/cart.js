@@ -137,7 +137,7 @@ function prixtotal() {
   var panier = getPanier();
   fetch("http://localhost:3000/api/products", myInit).then(
     function (response) {
-      response.json().then(function (data){
+      response.json().then(function (data) {
         var prixtotal = 0;
         panier.forEach((canaper) => {
           var canaperApi = data.find((elem) => {
@@ -152,74 +152,111 @@ function prixtotal() {
 }
 
 let form = document.querySelector(".cart__order__form");
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+  var firstName = document.getElementById("firstName").value
+  var lastName = document.getElementById("lastName").value
+  var address = document.getElementById("address").value
+  var city = document.getElementById("city").value
+  var email = document.getElementById("email").value
 
-var adressReg = new RegExp("/^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/");
-var nameReg = new RegExp("^[a-zA-Z_.+-]*(?:[a-zA-Z][a-zA-Z_.+-]*){2,}$");
-var emailReg = new RegExp("^[\w\-]+(\.[\w\-]+)*@[\w\-]+(\.[\w\-]+)*\.[\w\-]{2,4}$");
+  if (nameReg.test(firstName) && nameReg.test(lastName) && adressReg.test(address) && cityreg.test(city) && emailReg.test(email)) {
+    var contact = new (Object);
+    contact.firstName = prenom;
+    contact.lastName = nom;
+    contact.address = adresse;
+    contact.city = ville;
+    contact.email = email;
+
+    var products = [];
+    panier.forEach(canaper => {
+      products.push(canaper.id)
+
+      var requete = {
+        method: "POST",
+        headers: myHeaders,
+        mode: "cors",
+        cache: "default",
+      };
+
+      fetch('http://localhost:3000/api/order', {
+        method: 'POST',
+        mode: 'cors',
+        body:JSON.stringify({ "contact": contact, "products": products }),
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        
+      })
+        .then(data => {
+          console.log(data)
+        })
+
+    });
+
+  }
+  // avec mon object et mon array l'envoyer dans la requete post 
+})
+
+var cityreg = new RegExp(/^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/);
+var adressReg = new RegExp(/^.*?\s[N]{0,1}([-a-zA-Z0-9]+)\s*\w*$/);
+var nameReg = new RegExp(/^[0-9a-zA-Z_.+-]*(?:[a-zA-Z][a-zA-Z_.+-]*){2,}$/);
+var emailReg = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
 
 var prenom = document.querySelector('#firstNameErrorMsg');
-form.firstName.addEventListener('change', function(e) {
-    var value = e.target.value;
-    if (nameReg.test(value)){
-      prenom.innerHTML = '';
-    } else {
-      prenom.innerHTML = 'Champ invalide, veuillez vérifier votre prénom.';
-    }
+form.firstName.addEventListener('change', function (e) {
+  var value = e.target.value;
+  if (nameReg.test(value)) {
+    prenom.innerHTML = '';
+  } else {
+    prenom.innerHTML = 'Champ invalide, veuillez vérifier votre prénom.';
+  }
 });
 
 let nom = form.lastName.nextElementSibling;
-form.lastName.addEventListener('change', function(e) {
-    var value = e.target.value;
-    if (nameReg.test(value)){
-      nom.innerHTML = '';
-    } else {
-      nom.innerHTML = 'Champ invalide, veuillez vérifier votre nom.';
-    }
+form.lastName.addEventListener('change', function (e) {
+  var value = e.target.value;
+  if (nameReg.test(value)) {
+    nom.innerHTML = '';
+  } else {
+    nom.innerHTML = 'Champ invalide, veuillez vérifier votre nom.';
+  }
 });
 
 var adresse = document.querySelector('#addressErrorMsg');
-form.address.addEventListener('change', function(e) {
-    var value = e.target.value;
-    if (adressReg.test(value)){
-      adresse.innerHTML = '';
-    } else {
-      adresse.innerHTML = 'Champ invalide, veuillez vérifier votre adresse postale.';
-    }
+form.address.addEventListener('change', function (e) {
+  var value = e.target.value;
+  if (adressReg.test(value)) {
+    adresse.innerHTML = '';
+  } else {
+    adresse.innerHTML = 'Champ invalide, veuillez vérifier votre adresse postale.';
+  }
 });
 
 var ville = document.querySelector('#cityErrorMsg');
-form.city.addEventListener('change', function(e) {
-    var value = e.target.value;
-    console.log(adressReg.test(value))
-    if (adressReg.test(value)){
-      ville.innerHTML = '';
-    } else {
-      ville.innerHTML = 'Champ invalide, veuillez vérifier votre ville.';
-    }
+form.city.addEventListener('change', function (e) {
+  var value = e.target.value;
+  if (cityreg.test(value)) {
+    ville.innerHTML = '';
+  } else {
+    ville.innerHTML = 'Champ invalide, veuillez vérifier votre ville.';
+  }
 });
 
 var email = document.querySelector('#emailErrorMsg');
-form.email.addEventListener('change', function(e) {
-    var value = e.target.value;
-    if (emailReg.test(value)){
-      email.innerHTML = '';
-    } else {
-      email.innerHTML = 'Champ invalide, veuillez vérifier votre adresse email.';
-    }
+form.email.addEventListener('change', function (e) {
+  var value = e.target.value;
+  if (emailReg.test(value)) {
+    email.innerHTML = '';
+  } else {
+    email.innerHTML = 'Champ invalide, veuillez vérifier votre adresse email.';
+  }
 });
+
 
 // Regex Test
 // https://regex101.com/
 
 // Regex Cours
 // https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/RegExp
-
-// Regex Valeurs
-// Adresse email = ^[\w\-]+(\.[\w\-]+)*@[\w\-]+(\.[\w\-]+)*\.[\w\-]{2,4}$  
-// Nom / Prenom = ^[a-zA-Z_.+-]*(?:[a-zA-Z][a-zA-Z_.+-]*){2,}$ 
-// Ville / Adresse = ^[a-zA-Z0-9_.+-]*(?:[a-zA-Z][a-zA-Z0-9_.+-]*){2,}$ 
-
-// Objectif
-// si ca match pas mettre un message d'erreur
-// si ca match faire une requete post pour confirmer la commande
-// c'est comment la page acceuil avec les canaper le passer par url
