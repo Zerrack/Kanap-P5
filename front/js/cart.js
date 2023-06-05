@@ -1,8 +1,9 @@
+// funtion asynchrone qui fait appelle a quantitytotal + description prix total au chargement du script et away est une promesse
 (async () => {
   quantitytotal();
   await prixtotal();
 })();
-
+//variable permetant des recuperer des element dans le panier
 var panier = getPanier();
 
 var myHeaders = new Headers();
@@ -14,15 +15,14 @@ var myInit = {
   cache: "default",
 };
 
-async function getcanaper(id) { }
-
 var section = document.getElementById("cart__items");
 
+//ForEach permet d'exécuter des élément du tableau panier
 panier.forEach((canaper) => {
+  // affichage du detail du produit canaper
   fetch("http://localhost:3000/api/products/" + canaper.id, myInit).then(
     function (response) {
       response.json().then(function (data) {
-        var infocanaper = getcanaper(canaper.id);
         var article = document.createElement("article");
         article.setAttribute("class", "cart__item");
         article.setAttribute("data-id", canaper.id);
@@ -58,7 +58,7 @@ panier.forEach((canaper) => {
 
         var p3 = document.createElement("p");
         p3.textContent = "Qté:";
-
+        
         var input = document.createElement("input");
         input.setAttribute("type", "number");
         input.setAttribute("class", "itemQuantity");
@@ -99,58 +99,77 @@ panier.forEach((canaper) => {
   );
 });
 
+// Function deleteitem permet retire element de mon panier
 function deleteitem(e, id, color) {
   var panier = getPanier();
+  //forEach permet d'exécuter des élément du tableau panier
   panier.forEach((canaper, index) => {
     if (id == canaper.id) {
       panier.splice(index, 1)
     }
+    //met a jour le panier
     setPanier(panier);
+    //retire la parti HTML du panier
     e.target.parentNode.parentNode.parentNode.parentNode.remove()
+    //met a jour quantitytotal
     quantitytotal()
+    //met a jour le prixtotal 
     prixtotal()
   })
 }
-
+// Function updateQuantity permet mettre a jour la quantité de mon panier
 function updateQuantity(id, value, color) {
+  //forEach permet d'exécuter des élément du tableau panier
   panier.forEach((canaper) => {
     if (id == canaper.id && color == canaper.color) {
+      // recuperation de la nouvelle quantité
       let newquantity = parseInt(value);
       canaper.quantity = newquantity;
       setPanier(panier);
+      //met a jour quantitytotal
       quantitytotal()
+      //met a jour le prixtotal 
       prixtotal()
     }
   });
 }
+// Function quantitytotal permet d'avoir la quantité total dans le panier
 function quantitytotal() {
   var panier = getPanier();
   var quantitecanape = 0;
+  //forEach permet recuperer la quantité des éléments de mon panier pour les additionner
   panier.forEach((canaper) => {
     quantitecanape = parseInt(canaper.quantity) + quantitecanape;
   });
+  // Ajout de la nouvelle quantité à l'endroit prévu dans le HTML
   var nombretotal = document.querySelector("#totalQuantity");
   nombretotal.textContent = quantitecanape;
 }
 
+// Function prixtotal permet afficher le prix total du panier 
 function prixtotal() {
   var panier = getPanier();
+  // fecth permet de recuperer les produit de l'API
   fetch("http://localhost:3000/api/products", myInit).then(
     function (response) {
       response.json().then(function (data) {
         var prixtotal = 0;
+        //On recupere le prix de total de chaque élements de mon panier
         panier.forEach((canaper) => {
           var canaperApi = data.find((elem) => {
             return elem._id == canaper.id;
           });
+          //On multiplie "canaper.quantity" avec "canaperApi.price" et on addition "prixtotal" pour avoir le prix total 
           prixtotal = parseInt(canaper.quantity) * parseInt(canaperApi.price) + prixtotal;
         });
+        //On ajoute le prix total a l'endroit prevu dans le HTML 
         var prixtotalhtml = document.querySelector("#totalPrice");
         prixtotalhtml.textContent = prixtotal;
       });
     })
 }
 
+// Ajout d'une valeur de l'utilisateur 
 let form = document.querySelector(".cart__order__form");
 form.addEventListener('submit', function (e) {
   e.preventDefault();
@@ -160,6 +179,7 @@ form.addEventListener('submit', function (e) {
   var city = document.getElementById("city").value
   var email = document.getElementById("email").value
 
+// Regex permet de tester les combinaison de caractères 
   if (nameReg.test(firstName) && nameReg.test(lastName) && adressReg.test(address) && cityreg.test(city) && emailReg.test(email)) {
     var contact = new (Object);
     contact.firstName = prenom;
@@ -179,84 +199,98 @@ form.addEventListener('submit', function (e) {
         cache: "default",
       };
 
-      fetch('http://localhost:3000/api/order', {
+      //J'envoi ma commande avec mon API
+      fetch('http://localhost:3000/api/products/order/', {
         method: 'POST',
-        mode: 'cors',
-        body:JSON.stringify({ "contact": contact, "products": products }),
+        body:JSON.stringify({contact,products }),
         headers: {
-          Accept: "application/json",
+          "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        
       })
-        .then(data => {
-          console.log(data)
+        //.then renvoie orderId dans l'URL
+        .then(orderId =>{
+          orderId.json().then(function(data){
+            window.location.href='confirmation.html?order='+ data.orderId
+          })
         })
-
     });
-
   }
-  // avec mon object et mon array l'envoyer dans la requete post 
 })
 
+//Regex critère de validation
 var cityreg = new RegExp(/^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/);
 var adressReg = new RegExp(/^.*?\s[N]{0,1}([-a-zA-Z0-9]+)\s*\w*$/);
 var nameReg = new RegExp(/^[0-9a-zA-Z_.+-]*(?:[a-zA-Z][a-zA-Z_.+-]*){2,}$/);
 var emailReg = new RegExp(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/);
 
+// Permet de tester les regex si cest true et si c'est False indique une erreur
 var prenom = document.querySelector('#firstNameErrorMsg');
 form.firstName.addEventListener('change', function (e) {
   var value = e.target.value;
   if (nameReg.test(value)) {
     prenom.innerHTML = '';
-  } else {
+  } 
+  else {
     prenom.innerHTML = 'Champ invalide, veuillez vérifier votre prénom.';
   }
 });
 
-let nom = form.lastName.nextElementSibling;
+// Permet de tester les regex si cest true et si c'est False indique une erreur
+var nom = form.lastName.nextElementSibling;
 form.lastName.addEventListener('change', function (e) {
   var value = e.target.value;
   if (nameReg.test(value)) {
     nom.innerHTML = '';
-  } else {
+  } 
+  else {
     nom.innerHTML = 'Champ invalide, veuillez vérifier votre nom.';
   }
 });
 
+// Permet de tester les regex si cest true et si c'est False indique une erreur
 var adresse = document.querySelector('#addressErrorMsg');
 form.address.addEventListener('change', function (e) {
   var value = e.target.value;
   if (adressReg.test(value)) {
     adresse.innerHTML = '';
-  } else {
+  } 
+  else {
     adresse.innerHTML = 'Champ invalide, veuillez vérifier votre adresse postale.';
   }
 });
 
+// Permet de tester les regex si cest true et si c'est False indique une erreur
 var ville = document.querySelector('#cityErrorMsg');
 form.city.addEventListener('change', function (e) {
   var value = e.target.value;
   if (cityreg.test(value)) {
     ville.innerHTML = '';
-  } else {
+  } 
+  else {
     ville.innerHTML = 'Champ invalide, veuillez vérifier votre ville.';
   }
 });
 
+// Permet de tester les regex si cest true et si c'est False indique une erreur
 var email = document.querySelector('#emailErrorMsg');
 form.email.addEventListener('change', function (e) {
   var value = e.target.value;
   if (emailReg.test(value)) {
     email.innerHTML = '';
-  } else {
+  } 
+  else {
     email.innerHTML = 'Champ invalide, veuillez vérifier votre adresse email.';
   }
 });
 
-
-// Regex Test
-// https://regex101.com/
-
-// Regex Cours
-// https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+//fetch 
+//funtion asyncrone
+//les conditions
+//for foreach
+//localestorage
+//regex
+//methode post / get 
+//revoir tout code
+//.then
+//metode post
